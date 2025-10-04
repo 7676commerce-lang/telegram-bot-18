@@ -1,26 +1,42 @@
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
-# 🚨 Token directo (cuidado si el repo es público)
+# 🚨 Token directo (cuidado si tu repo es público en GitHub)
 TOKEN = "8298151817:AAFQCZCw2uGQOvDBI55sBpbQucFfzCWICew"
 
+# Lista de botones de canales
+channels = [
+    {"name": "🔥 Canal Oficial", "url": "https://t.me/TU_CANAL"}  # <-- cambia por el tuyo
+]
+
 # --- Funciones ---
+
+# Construir teclado dinámico
+def build_keyboard():
+    keyboard = []
+    for ch in channels:
+        keyboard.append([InlineKeyboardButton(ch["name"], url=ch["url"])])
+    return InlineKeyboardMarkup(keyboard)
 
 # Comando /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 Bienvenido!\n\n"
-        "Envíame el enlace de tu canal y lo promocionaré aquí mismo 📢."
+        "📢 Bienvenido!\n\nAquí puedes ver canales promocionados o enviar el tuyo 👇",
+        reply_markup=build_keyboard()
     )
 
-# Cuando alguien envía un mensaje
+# Usuario manda un link
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
-    # Verifica si parece un link de Telegram
+    # Aceptar solo links de Telegram
     if text.startswith("https://t.me/") or text.startswith("@"):
+        new_channel = {"name": f"Canal de {update.effective_user.first_name}", "url": text}
+        channels.append(new_channel)
+
         await update.message.reply_text(
-            f"✅ Tu canal ha sido promocionado:\n{text}"
+            "✅ Tu canal ha sido añadido a la lista de promoción.",
+            reply_markup=build_keyboard()
         )
     else:
         await update.message.reply_text("❌ Solo acepto enlaces de canales de Telegram.")

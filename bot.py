@@ -1,41 +1,40 @@
-import os
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from telegram import Update
-from telegram.ext import CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
-# 🔑 Pega tu token nuevo aquí entre comillas
-TOKEN = "8298151817:AAFQCZCw2uGQOvDBI55sBpbQucFfzCWICew
-"
+# 🚨 Token directo (cuidado si el repo es público)
+TOKEN = "8298151817:AAFQCZCw2uGQOvDBI55sBpbQucFfzCWICew"
 
-canales_guardados = []
+# --- Funciones ---
 
-async def start(update: Update, context: CallbackContext):
+# Comando /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 Bienvenido al bot de promoción.\n\n"
-        "📢 Envíame el enlace de tu canal y lo guardaré para que otros lo vean.\n"
-        "👉 Usa /ver para ver la lista de canales."
+        "👋 Bienvenido!\n\n"
+        "Envíame el enlace de tu canal y lo promocionaré aquí mismo 📢."
     )
 
-async def guardar_canal(update: Update, context: CallbackContext):
-    link = update.message.text
-    if link.startswith("https://t.me/"):
-        canales_guardados.append(link)
-        await update.message.reply_text("✅ Canal guardado con éxito.")
-    else:
-        await update.message.reply_text("❌ El enlace no es válido.")
+# Cuando alguien envía un mensaje
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
 
-async def ver(update: Update, context: CallbackContext):
-    if canales_guardados:
-        lista = "\n".join(canales_guardados)
-        await update.message.reply_text(f"📢 Canales promocionados:\n\n{lista}")
+    # Verifica si parece un link de Telegram
+    if text.startswith("https://t.me/") or text.startswith("@"):
+        await update.message.reply_text(
+            f"✅ Tu canal ha sido promocionado:\n{text}"
+        )
     else:
-        await update.message.reply_text("Aún no hay canales guardados.")
+        await update.message.reply_text("❌ Solo acepto enlaces de canales de Telegram.")
 
+# --- Función principal ---
 def main():
     app = Application.builder().token(TOKEN).build()
+
+    # Comandos
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("ver", ver))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, guardar_canal))
+
+    # Mensajes de texto
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
     print("🤖 Bot en marcha...")
     app.run_polling()
 
